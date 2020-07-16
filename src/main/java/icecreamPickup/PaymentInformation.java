@@ -62,13 +62,13 @@ public class PaymentInformation {
                 }
             });
 
-/*
+
             try {
                 Thread.currentThread().sleep((long) (400 + Math.random() * 220));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-*/
+
         }
 
     }
