@@ -2,6 +2,9 @@ package icecreamPickup;
 
 import javax.persistence.*;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.util.List;
 
 @Entity
@@ -13,7 +16,7 @@ public class PaymentInformation {
     private Long id;
     private Long orderId;
     private String paymentStatus;
-
+/*
     @PostUpdate
     public void onPostUpdate(){
         if (this.getPaymentStatus().equals("CANCEL")) {
@@ -34,11 +37,38 @@ public class PaymentInformation {
         }
 
     }
+
+ */
     @PrePersist
     public void onPrePersist(){
+        /*
         if (this.getPaymentStatus().equals("ORDER")) {
             this.setPaymentStatus("APPROVED");
+        }
+        */
+        if (this.getPaymentStatus().equals("CANCEL")) {
+            PaymentCanceled paymentCanceled = new PaymentCanceled();
+            BeanUtils.copyProperties(this, paymentCanceled);
+            paymentCanceled.publish();
 
+        }else{
+            PaymentApproved paymentApproved = new PaymentApproved();
+            BeanUtils.copyProperties(this, paymentApproved);
+            paymentApproved.setPaymentStatus("APPROVED");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void beforeCommit(boolean readOnly) {
+                    paymentApproved.publish();
+                }
+            });
+
+/*
+            try {
+                Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+*/
         }
 
     }
